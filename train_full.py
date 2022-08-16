@@ -62,7 +62,7 @@ flags.DEFINE_integer(
     'num_channels2', 512,
     'num_channels của conv2d')
 
-def get_dataset(dataset,augment=False,img_size=(224,224)):
+def get_dataset(dataset,augment=False,img_size=(FLAGS.image_size, FLAGS.image_size)):
     AUTO = tf.data.experimental.AUTOTUNE
     data_augmentation = Sequential([
         RandomFlip('horizontal'),
@@ -91,7 +91,11 @@ def vgg_block(num_channels, num_convs):
     blk.add(MaxPool2D((2, 2), strides=(2, 2)))
     return blk
 
-def add_top_layers(model, image_size, num_channels=[512,512], num_convs=[1,1], nb_class=1):
+def add_top_layers(model,
+                   image_size=(FLAGS.image_size, FLAGS.image_size),
+                   num_channels=[FLAGS.num_channels1,FLAGS.num_channels2],
+                   num_convs=[1,1],
+                   nb_class=FLAGS.num_class):
     
     def add_vgg_blocks(block):
         for num_channel,num_conv in zip(num_channels, num_convs):
@@ -120,7 +124,6 @@ def compile(model,lr):
     )
     
 def main(argv):
-    img_size = (FLAGS.image_size, FLAGS.image_size)
     # detect and init the TPU
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
     # instantiate a distribution strategy
@@ -134,9 +137,9 @@ def main(argv):
         data_dir=GCS_DS_PATH,
     )
     
-    ds = get_dataset(train,augment=True,img_size=img_size)
-    ds_val = get_dataset(val,img_size=img_size)
-    ds_test = get_dataset(test,img_size=img_size)
+    ds = get_dataset(train,augment=True)
+    ds_val = get_dataset(val)
+    ds_test = get_dataset(test)
 
     
     #call back
@@ -156,17 +159,12 @@ def main(argv):
                                                  compile=False,
                                                 )
         
-        image_model =add_top_layers(patch_model,
-                                    image_size=img_size,
-                                    num_channels=[FLAGS.num_channels1,FLAGS.num_channels2],
-                                    num_convs=[1,1],
-                                    nb_class=FLAGS.num_class,
-                                   )
-        logging.info(image_model.summary())
+        image_model =add_top_layers(patch_model)
         for layer in image_model.layers[:2]:
             layer.trainable = False
         compile(image_model,lr=FLAGS.lr_step1)
-
+        
+    logging.info(image_model.summary())
     history = image_model.fit(ds,
                               epochs=FLAGS.epochs_step1,
                               validation_data=ds_val,
