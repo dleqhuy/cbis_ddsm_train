@@ -10,6 +10,7 @@ Here is a table for model acc:
 
 1. Set learning rate to 10−4, and train the newly added top layers for 30 epochs. 
 2. Set learning rate to 10−5, and train all layers for 20 epochs for a total of 50 epochs.
+
 | Database  | Patch Classifier  | Top Layers (two blocks)  | Accuracy  |
 |---|---|---|---|
 | CBIS-DDSM  | Resnet50  | 512x1  | 0.73529  |
