@@ -6,10 +6,13 @@
 
 
 ## Whole image model downloads
-Here is a table for model acc:
+
+2-stage training strategy was employed to first train the newly added top layers (i.e. function g) and then train all layers (i.e. function h) with a reduced learning rate, which was as follows:
 
 1. Set learning rate to 10−4, and train the newly added top layers for 30 epochs. 
 2. Set learning rate to 10−5, and train all layers for 20 epochs for a total of 50 epochs.
+
+Here is a table for model acc:
 
 | Database  | Patch Classifier  | Top Layers (two blocks)  | Accuracy  |
 |---|---|---|---|
